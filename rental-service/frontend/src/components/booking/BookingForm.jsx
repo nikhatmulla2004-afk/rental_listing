@@ -18,8 +18,11 @@ export default function BookingForm({ property, onDone }) {
       await inquiryApi.create({ propertyId: property?.id, ...form })
       setSent(true)
       onDone?.()
-    } catch {
-      setError('We could not send your inquiry. Please try again.')
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : ''
+      setError(message === 'Failed to fetch'
+        ? 'Could not reach the rental service. Check your connection and API settings, then try again.'
+        : message || 'We could not send your inquiry. Please try again.')
     } finally {
       setSubmitting(false)
     }
