@@ -383,6 +383,14 @@
 }
 
 @media (max-width: 640px) {
+  .listing-grid {
+    gap: 24px;
+  }
+
+  .listing-card .card-body {
+    padding: 18px;
+  }
+
   .create-page .listing-form,
   .create-page .form-section,
   .create-page .form-fields,
