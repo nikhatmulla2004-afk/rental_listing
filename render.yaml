@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: rental-service-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./rental-service/Dockerfile
+    dockerContext: ./rental-service
+    healthCheckPath: /api/properties
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rental-service-db
+          property: connectionString
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: rental-service-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: rental-service-db
+          property: password
+
+databases:
+  - name: rental-service-db
+    plan: free
+    region: oregon
+    databaseName: rental_service
+    user: rental_service

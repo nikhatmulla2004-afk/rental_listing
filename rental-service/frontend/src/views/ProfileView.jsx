@@ -1,0 +1,13 @@
+import { ArrowUpRight, CalendarDays, CheckCircle2, Clock3, LogOut, UserRound } from 'lucide-react'
+import { useState } from 'react'
+import Button from '../components/common/Button'
+import InputField from '../components/common/InputField'
+import Modal from '../components/common/Modal'
+
+export default function ProfileView({ user, onUpdate, onSignOut }) {
+  const [editOpen, setEditOpen] = useState(false)
+  const [form, setForm] = useState({ name: user?.name || '', email: user?.email || '' })
+  const update = (key) => (event) => setForm({ ...form, [key]: event.target.value })
+  const saveProfile = (event) => { event.preventDefault(); if (!form.name.trim() || !form.email.trim()) return; onUpdate({ ...user, name: form.name.trim(), email: form.email.trim() }); setEditOpen(false) }
+  return <main className="profile-page"><div className="profile-hero"><div className="avatar"><span>{(user?.name || 'A').slice(0, 1).toUpperCase()}</span></div><div><span className="eyebrow">Your havenly</span><h1>Good to see you, {user?.name || 'there'}.</h1><p>{user?.email || 'Manage your stays and personal details.'}</p></div><div className="profile-actions"><Button variant="outline" onClick={() => { setForm({ name: user?.name || '', email: user?.email || '' }); setEditOpen(true) }}>Edit profile</Button><button className="signout-button" onClick={onSignOut}><LogOut size={15} /> Sign out</button></div></div><section className="profile-grid"><div className="dashboard-panel"><div className="panel-heading"><div><span className="eyebrow">Upcoming</span><h2>Your reservations</h2></div><button className="text-button">View all <ArrowUpRight size={16} /></button></div><div className="trip-row"><div className="trip-image" /><div className="trip-info"><span className="status upcoming"><Clock3 size={13} /> Pending approval</span><h3>The Courtyard House</h3><p><CalendarDays size={14} /> 01 Oct 2026 · 12 months</p></div><strong>₹28,500<span>/ month</span></strong></div></div><div className="dashboard-panel stats"><div><span className="stat-icon"><CheckCircle2 size={18} /></span><b>1</b><span>Active booking</span></div><div><span className="stat-icon"><Clock3 size={18} /></span><b>2</b><span>Saved homes</span></div></div></section><Modal open={editOpen} title="Edit your profile" onClose={() => setEditOpen(false)}><form className="profile-edit-form" onSubmit={saveProfile}><InputField label="Full name" value={form.name} onChange={update('name')} required /><InputField label="Email address" type="email" value={form.email} onChange={update('email')} required /><Button type="submit">Save changes</Button></form></Modal></main>
+}
