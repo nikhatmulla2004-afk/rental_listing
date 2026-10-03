@@ -55,7 +55,12 @@ export default function App() {
       return next
     })
   }
-  const createListing = async (property) => { try { const created = await propertyApi.create(property); setListings([created, ...listings]); setToast('Your listing is live.'); navigate('home') } catch { setListings([{ ...property, id: Date.now() }, ...listings]); setToast('Saved locally. Connect the API to publish it remotely.'); navigate('home') } }
+  const createListing = async (property) => {
+    const created = await propertyApi.create(property)
+    setListings((current) => [created, ...current])
+    setToast('Your listing is live.')
+    navigate('home')
+  }
   const pageContent = view === 'detail' ? <ListingDetailView property={selected} onBack={() => navigate('home')} /> : view === 'create' ? <CreateListingView onBack={() => navigate('home')} onSave={createListing} /> : view === 'profile' ? <ProfileView user={user} onUpdate={updateUser} onSignOut={signOut} /> : view === 'saved' ? <SavedListingsView listings={listings.filter((property) => savedIds.has(property.id))} onSelect={(property) => { setSelected(property); navigate('detail') }} /> : <HomeListingView listings={visible} loading={loading} filters={filters} setFilters={setFilters} onSearch={searchHomes} page={page} onPageChange={setPage} onSelect={(property) => { setSelected(property); navigate('detail') }} savedIds={savedIds} onToggleSave={toggleSave} />
   return <><Navbar view={view} onNavigate={requestNavigation} user={user} onSignIn={() => setAuthOpen(true)} onPlaceSelect={selectPlace} />{pageContent}<Footer />{toast && <div className="toast">{toast}</div>}<AuthModal open={authOpen} onClose={() => { setAuthOpen(false); setPendingView(null) }} onAuthenticated={authenticate} /></>
 }

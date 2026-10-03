@@ -28,6 +28,7 @@ Testing also found user-facing gaps in authentication, date/guest filtering, sav
 | Inquiry submission | Submit a name, email, and message for an existing property | `PASS` - API returned HTTP 201 with an inquiry ID; confirmation appeared. |
 | Inquiry validation | Submit an empty name and an unknown property ID | `PASS` - API returned HTTP 400 and HTTP 404 respectively. |
 | Inquiry persistence | Save an inquiry through Spring integration test and read it from the repository | `PASS` - covered by the backend test suite. |
+| Listing photo persistence | Upload a JPG/PNG photo with a listing and retrieve it from the API | `PASS` - photo ID and image bytes survive the database round trip. |
 | Publish validation | Publish without title, city, or rent | `PASS` - required-field message appeared. |
 | Publish and cleanup | Publish temporary listing, read it back, then delete it | `PASS` - HTTP 200 create, rent read back, HTTP 204 delete, then HTTP 404 lookup. |
 | Database restart | Create temporary listing, restart Spring Boot, fetch and delete it | `PASS` - record survived restart; four sample listings remained after cleanup. |
@@ -46,7 +47,7 @@ Testing also found user-facing gaps in authentication, date/guest filtering, sav
 | High | Inquiry submission does not notify landlords. | Inquiry is stored, but there is no email delivery or host inbox. |
 | Medium | Save draft exits the form without saving. | Clicking it returned to Home with no draft confirmation. |
 | Medium | Saved listings disappear after reload. | Saved item was visible before reload and absent afterward. |
-| Medium | Listing amenities do not persist; photo persistence is not implemented in the API/model. | Selected Wi-Fi was absent on read-back; the backend property model has no amenity or photo fields. |
+| Medium | Listing amenities do not persist. | Selected Wi-Fi was absent on read-back. |
 | Low | Create-listing layout has a narrow-screen overflow. | At the 320 px viewport check, document width was 383 px and client width 381 px. |
 | Informational | Profile reservation details and counts are demo values. | Profile view renders fixed booking information rather than API-backed reservations. |
 
@@ -74,6 +75,6 @@ No frontend test script, repeatable browser E2E suite, or testing-strategy docum
 
 ## Coverage Limits and Test Data
 
-Real authentication and authorization, email delivery, payments, booking creation, uploaded-photo storage, and external map/geocoding behavior were not validated. Photo upload persistence is not implemented in the current API/model.
+Real authentication and authorization, email delivery, payments, booking creation, amenity persistence, and external map/geocoding behavior were not validated. Uploaded photos are stored in the database and served by the property photo API.
 
 Temporary listing records were deleted; four sample listings remain. One synthetic inquiry from the browser test remains in local H2 because the application has no inquiry-delete endpoint.

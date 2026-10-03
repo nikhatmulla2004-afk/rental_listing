@@ -2,9 +2,11 @@ package com.rental.rental_service;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -14,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockMultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rental.model.Property;
@@ -99,5 +102,41 @@ class RentalServiceApplicationTests {
 
                 Long inquiryId = objectMapper.readTree(response).get("id").asLong();
                 assertTrue(inquiryRepository.findById(inquiryId).isPresent());
+        }
+
+        @Test
+        void shouldPersistAndServeUploadedPropertyPhoto() throws Exception {
+                Property property = new Property();
+                property.setTitle("Photo Test Listing");
+                property.setCity("Pune");
+                property.setRent(java.math.BigDecimal.valueOf(25000));
+                byte[] image = new byte[] { 1, 2, 3, 4 };
+
+                MockMultipartFile propertyPart = new MockMultipartFile(
+                                "property", "", MediaType.APPLICATION_JSON_VALUE,
+                                objectMapper.writeValueAsBytes(property));
+                MockMultipartFile photoPart = new MockMultipartFile(
+                                "photos", "front.png", MediaType.IMAGE_PNG_VALUE, image);
+
+                String response = mockMvc.perform(multipart("/api/properties")
+                                .file(propertyPart)
+                                .file(photoPart))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.photoIds.length()").value(1))
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString();
+
+                var created = objectMapper.readTree(response);
+                Long propertyId = created.get("id").asLong();
+                Long photoId = created.get("photoIds").get(0).asLong();
+
+                mockMvc.perform(get("/api/properties/{id}", propertyId))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.photoIds[0]").value(photoId));
+                mockMvc.perform(get("/api/properties/{propertyId}/photos/{photoId}", propertyId, photoId))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(MediaType.IMAGE_PNG))
+                                .andExpect(content().bytes(image));
         }
 }
