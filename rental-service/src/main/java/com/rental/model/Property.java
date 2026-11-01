@@ -4,14 +4,19 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
@@ -25,6 +30,8 @@ public class Property {
     private String title;
     private String description;
     private String type;
+    private String furnishingStatus = "UNFURNISHED";
+    private Integer areaSqft;
     private BigDecimal rent;
     private BigDecimal deposit;
     private String address;
@@ -34,11 +41,16 @@ public class Property {
     private Integer bedrooms;
     private Integer bathrooms;
     private Boolean available = true;
-    @ElementCollection
-    @CollectionTable(name = "property_photo_ids", joinColumns = @JoinColumn(name = "property_id"))
-    @Column(name = "photo_id", nullable = false)
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "property_amenities", joinColumns = @JoinColumn(name = "property_id"))
+    @Column(name = "amenity", nullable = false)
     @OrderColumn(name = "display_order")
-    private List<Long> photoIds = new ArrayList<>();
+    private List<String> amenities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "property", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<PropertyPhoto> photos = new ArrayList<>();
 
     public Property() {
     }
@@ -81,6 +93,22 @@ public class Property {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getFurnishingStatus() {
+        return furnishingStatus;
+    }
+
+    public void setFurnishingStatus(String furnishingStatus) {
+        this.furnishingStatus = furnishingStatus;
+    }
+
+    public Integer getAreaSqft() {
+        return areaSqft;
+    }
+
+    public void setAreaSqft(Integer areaSqft) {
+        this.areaSqft = areaSqft;
     }
 
     public BigDecimal getRent() {
@@ -155,11 +183,20 @@ public class Property {
         this.available = available;
     }
 
-    public List<Long> getPhotoIds() {
-        return photoIds;
+    public List<String> getAmenities() {
+        return amenities;
     }
 
-    public void setPhotoIds(List<Long> photoIds) {
-        this.photoIds = photoIds == null ? new ArrayList<>() : new ArrayList<>(photoIds);
+    public void setAmenities(List<String> amenities) {
+        this.amenities = amenities == null ? new ArrayList<>() : new ArrayList<>(amenities);
+    }
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public List<Long> getPhotoIds() {
+        return photos.stream().map(photo -> photo.getId()).filter(id -> id != null).toList();
+    }
+
+    public void addPhoto(PropertyPhoto photo) {
+        photos.add(photo);
     }
 }

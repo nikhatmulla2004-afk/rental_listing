@@ -1,11 +1,18 @@
 package com.rental.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.springframework.lang.NonNull;
 
 @Entity
 @Table(name = "property_photos")
@@ -14,20 +21,24 @@ public class PropertyPhoto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long propertyId;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "property_id", nullable = false)
+    @JsonIgnore
+    private Property property;
 
+    @NonNull
     @Column(nullable = false)
     private String contentType;
 
-    @Column(nullable = false, length = 10_485_760)
+    @Lob
+    @JsonIgnore
     private byte[] content;
 
     protected PropertyPhoto() {
     }
 
-    public PropertyPhoto(Long propertyId, String contentType, byte[] content) {
-        this.propertyId = propertyId;
+    public PropertyPhoto(Property property, String contentType, byte[] content) {
+        this.property = property;
         this.contentType = contentType;
         this.content = content;
     }
@@ -36,10 +47,17 @@ public class PropertyPhoto {
         return id;
     }
 
+    @JsonProperty
     public Long getPropertyId() {
-        return propertyId;
+        return property == null ? null : property.getId();
     }
 
+    @JsonIgnore
+    public Property getProperty() {
+        return property;
+    }
+
+    @NonNull
     public String getContentType() {
         return contentType;
     }

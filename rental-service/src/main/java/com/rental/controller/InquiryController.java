@@ -1,8 +1,13 @@
 package com.rental.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,36 +15,43 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rental.dto.InquiryRequest;
 import com.rental.model.Inquiry;
-import com.rental.repository.InquiryRepository;
-import com.rental.repository.PropertyRepository;
+import com.rental.service.InquiryService;
 
 @RestController
 @RequestMapping("/api/inquiries")
 @CrossOrigin(origins = "*")
 public class InquiryController {
-    private final InquiryRepository inquiryRepository;
-    private final PropertyRepository propertyRepository;
+    private final InquiryService inquiryService;
 
-    public InquiryController(InquiryRepository inquiryRepository, PropertyRepository propertyRepository) {
-        this.inquiryRepository = inquiryRepository;
-        this.propertyRepository = propertyRepository;
+    public InquiryController(InquiryService inquiryService) {
+        this.inquiryService = inquiryService;
+    }
+
+    @GetMapping
+    public List<Inquiry> getAll() {
+        return inquiryService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Inquiry> getById(@PathVariable Long id) {
+        return inquiryService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/property/{propertyId}")
+    public List<Inquiry> getByProperty(@PathVariable Long propertyId) {
+        return inquiryService.findByProperty(propertyId);
     }
 
     @PostMapping
     public ResponseEntity<Inquiry> create(@RequestBody InquiryRequest request) {
-        if (request.propertyId() == null || request.name() == null || request.name().isBlank()
-                || request.email() == null || request.email().isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
-        if (!propertyRepository.existsById(request.propertyId())) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(inquiryService.create(request));
+    }
 
-        Inquiry inquiry = new Inquiry();
-        inquiry.setPropertyId(request.propertyId());
-        inquiry.setName(request.name().trim());
-        inquiry.setEmail(request.email().trim());
-        inquiry.setMessage(request.message());
-        return ResponseEntity.status(HttpStatus.CREATED).body(inquiryRepository.save(inquiry));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        inquiryService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
